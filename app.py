@@ -1,21 +1,24 @@
+import os  # Import the os module
 import streamlit as st
 import torch
 from transformers import RobertaTokenizer, RobertaForSequenceClassification
 
-# Load model and tokenizer
-model = RobertaForSequenceClassification.from_pretrained("./fine_tuned_model")
-tokenizer = RobertaTokenizer.from_pretrained("./fine_tuned_model")
+# Load the fine-tuned model and tokenizer
+model_path = "./fine_tuned_model"  # Update this path if necessary
+if not os.path.exists(model_path):
+    st.error(f"Model path {model_path} does not exist!")
+else:
+    model = RobertaForSequenceClassification.from_pretrained(model_path)
+    tokenizer = RobertaTokenizer.from_pretrained(model_path)
 
-st.title("Sentiment Insight Chatbot")
-
-# User input
-user_input = st.text_input("Enter your message:")
-
-if st.button("Submit"):
-    inputs = tokenizer(user_input, return_tensors='pt', truncation=True, padding=True)
+# Streamlit interface
+st.title("Sentiment Analysis Chatbot")
+user_input = st.text_input("Enter a text to analyze sentiment:")
+if st.button("Analyze"):
+    inputs = tokenizer(user_input, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
     logits = outputs.logits
     prediction = torch.argmax(logits, dim=1).item()
     sentiment = "Positive" if prediction == 1 else "Negative"
-    st.write(f"The sentiment of your message is: **{sentiment}**")
+    st.write(f"Sentiment: {sentiment}")
